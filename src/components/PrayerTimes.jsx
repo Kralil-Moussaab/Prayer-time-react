@@ -1,5 +1,6 @@
 import React from "react";
 import { useLanguage } from "./LanguageContext";
+
 const PrayerTimes = ({ prayerTimes }) => {
   const prayerNames = {
     Fajr: "الفجر",
@@ -14,12 +15,13 @@ const PrayerTimes = ({ prayerTimes }) => {
   return (
     <ul className="flex flex-col items-stretch max-w-md w-full gap-3 overflow-hidden">
       {prayerTimes &&
-        Object.entries(prayerTimes).map(([name, time]) => {
+        Object.entries(prayerTimes).map(([name, time], index) => {
           if (prayerNames[name]) {
             return (
               <li
                 key={name}
-                className="flex py-3 px-5 items-center justify-between flex-1 w-full bg-primary-700 text-primary-200 rounded-md text-xl"
+                className="flex py-3 animate-slideDown px-5 items-center justify-between opacity-0 flex-1 w-full bg-primary-700 text-primary-200 rounded-md text-xl"
+                style={{ animationDelay: `${index * 0.4}s` }} // Add animation delay based on index
               >
                 {language === "ar" ? (
                   <>

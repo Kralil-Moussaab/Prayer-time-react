@@ -7,16 +7,28 @@ import PrayerTimes from "./components/PrayerTimes";
 import "./App.css";
 import { CircleSpinner } from "react-spinners-kit";
 import Search from "./components/Search";
+
 function App() {
   const { language, toggleLanguage } = useLanguage();
   const [prayerTimes, setPrayerTimes] = useState(null);
   const [hijriDate, setHijriDate] = useState("");
   const [hijriWeekday, setHijriWeekday] = useState("");
+  const [gregorianWeekday, setGregorianWeekday] = useState("");
   const [gregorianDate, setGregorianDate] = useState("");
   const [timeLeft, setTimeLeft] = useState("");
   const [nextPrayerName, setNextPrayerName] = useState("");
   const [location, setLocation] = useState({ city: "" });
   const [isLoading, setIsLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isButtonVisible, setIsButtonVisible] = useState(true);
+
+  const handleArabicInputChange = (value) => {
+    setArabicInput(value);
+  };
+
+  const handleEnglishInputChange = (value) => {
+    setEnglishInput(value);
+  };
 
   useEffect(() => {
     const fetchPrayerTimes = async () => {
@@ -30,12 +42,12 @@ function App() {
         const formattedgregorianDate = formatgregorianDate(gregorianDateObj);
         setPrayerTimes(response.data.data.timings);
         setHijriDate(formattedHijriDate);
-        setHijriWeekday(
-          response.data.data.date.hijri.weekday[language === "ar" ? "ar" : "en"]
-        );
+        setHijriWeekday(response.data.data.date.hijri.weekday.ar);
+        setGregorianWeekday(response.data.data.date.gregorian.weekday.en);
         setGregorianDate(formattedgregorianDate);
         calculateTimeLeft(response.data.data.timings);
         setIsLoading(false);
+        setIsButtonVisible(false);
       } catch (error) {
         console.error("Error fetching prayer times:", error);
       }
@@ -47,9 +59,10 @@ function App() {
   }, [location, language]);
 
   const handleCityChange = (e) => {
-    setLocation({ city: e.target.value });
+    setLocation({ city: e.target.value.replace(/\s+/g, "-") });
     setIsLoading(true);
   };
+
   useEffect(() => {
     const interval = setInterval(() => {
       if (prayerTimes) {
@@ -105,6 +118,7 @@ function App() {
     }`;
     setNextPrayerName(next);
   };
+
   const formatHijriDate = (hijriDateObj) => {
     const day = hijriDateObj.day;
     const month = hijriDateObj.month[language === "ar" ? "ar" : "en"];
@@ -112,6 +126,7 @@ function App() {
 
     return `${year} ${day} ${month} `;
   };
+
   const formatgregorianDate = (gregorianDateObj) => {
     const day = gregorianDateObj.day;
     const month = gregorianDateObj.month.en;
@@ -119,19 +134,41 @@ function App() {
 
     return `${day} ${month} ${year}`;
   };
+
+  const handleResize = () => {
+    const currentWidth = window.innerWidth;
+    if (
+      (isMobile && currentWidth >= 768) ||
+      (!isMobile && currentWidth < 768)
+    ) {
+      setIsMobile(currentWidth < 768);
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [isMobile]);
+
   return (
-    <div className="min-h-screen pt-5 px-5 sm:px-10">
+    <div className="mb-2 pt-2 md:pt-5 px-5 sm:px-10 md:px-20">
       <header>
         <nav>
-          <ul className="flex flex-col gap-5 py-2 ">
-            <button
-              className="mb-4 p-2 px-5 ring-primary-200 transition-colors duration-200 hover:bg-primary-400 hover:ring-2 hover:text-primary-800 bg-primary-700 m-auto text-white text-2xl font-bold rounded"
-              onClick={toggleLanguage}
-            >
-              {language === "ar" ? "Switch to English" : "تبديل إلى العربية"}
-            </button>
+          <ul className="flex flex-col gap-3 py-2 md:flex-row md:justify-around items-center">
+            <Search
+              handleCityChange={handleCityChange}
+              onArabicInputChange={handleArabicInputChange}
+              onEnglishInputChange={handleEnglishInputChange}
+            />
             <CurrentTime />
-            <Search handleCityChange={handleCityChange} />
+            {isButtonVisible && (
+              <button
+                className=" p-1 md:p-2  px-5  ring-primary-200 cursor-pointer transition-colors duration-200 hover:bg-primary-400  hover:ring-2 hover:text-primary-800 bg-primary-700  text-white text-2xl font-bold rounded m-auto md:m-0 md:h-min"
+                onClick={toggleLanguage}
+              >
+                {language === "ar" ? "en" : "ar"}
+              </button>
+            )}
           </ul>
         </nav>
       </header>
@@ -140,7 +177,7 @@ function App() {
           <CircleSpinner loading={isLoading} size={40} />
         </div>
       ) : (
-        <main className="flex flex-col gap-5 justify-center items-center my-10">
+        <main className="flex flex-col md:gap-5 justify-center items-center  md:flex-row md:justify-around md:mt-24">
           {location.city === "" ? (
             <h1 className="p-3 font-semibold text-3xl text-center">
               {language === "ar"
@@ -149,14 +186,51 @@ function App() {
             </h1>
           ) : (
             <>
-              <PrayerInfo
-                hijriDate={hijriDate}
-                hijriWeekday={hijriWeekday}
-                gregorianDate={gregorianDate}
-                timeLeft={timeLeft}
-                nextPrayerName={nextPrayerName}
-              />
-              <PrayerTimes prayerTimes={prayerTimes} />
+              {isMobile ? (
+                <>
+                  {" "}
+                  <PrayerInfo
+                    location={location.city}
+                    hijriDate={hijriDate}
+                    hijriWeekday={hijriWeekday}
+                    gregorianWeekday={gregorianWeekday}
+                    gregorianDate={gregorianDate}
+                    timeLeft={timeLeft}
+                    nextPrayerName={nextPrayerName}
+                  />
+                  <PrayerTimes prayerTimes={prayerTimes} />
+                </>
+              ) : (
+                <>
+                  {language === "ar" ? (
+                    <>
+                      <PrayerTimes prayerTimes={prayerTimes} />
+                      <PrayerInfo
+                        location={location.city}
+                        hijriDate={hijriDate}
+                        hijriWeekday={hijriWeekday}
+                        gregorianWeekday={gregorianWeekday}
+                        gregorianDate={gregorianDate}
+                        timeLeft={timeLeft}
+                        nextPrayerName={nextPrayerName}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <PrayerInfo
+                        location={location.city}
+                        hijriDate={hijriDate}
+                        hijriWeekday={hijriWeekday}
+                        gregorianWeekday={gregorianWeekday}
+                        gregorianDate={gregorianDate}
+                        timeLeft={timeLeft}
+                        nextPrayerName={nextPrayerName}
+                      />
+                      <PrayerTimes prayerTimes={prayerTimes} />
+                    </>
+                  )}
+                </>
+              )}
             </>
           )}
         </main>

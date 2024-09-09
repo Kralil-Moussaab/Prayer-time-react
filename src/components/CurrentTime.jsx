@@ -15,7 +15,7 @@ const CurrentTime = () => {
 
   return (
     <li>
-      <div className="flex flex-col items-center justify-center gap-1 font-bold p-3 border border-primary-200 shadow-lg rounded-lg max-w-xs mx-auto text-center">
+      <div className="flex flex-col items-center justify-center gap-1 font-bold p-2 md:p-3 border border-primary-200 shadow-lg rounded-lg max-w-xs mx-auto text-center">
         <span className="text-sm">
           {language === "ar" ? "الوقت المحلي" : "Local time"}
         </span>

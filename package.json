@@ -13,8 +13,6 @@
     "axios": "^1.7.7",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-emoji": "^0.5.0",
-    "react-flagkit": "^2.0.4",
     "react-spinners-kit": "^1.9.1"
   },
   "devDependencies": {
